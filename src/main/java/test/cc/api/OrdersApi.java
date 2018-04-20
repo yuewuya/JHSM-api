@@ -58,6 +58,11 @@ public class OrdersApi {
         return BaseBeanUtil.setData((int)page.getTotalElements(), page.getContent());
     }
 
+    @RequestMapping("/findById")
+    public Object findById(@RequestBody Orders order){
+        return BaseBeanUtil.setData(ordersRepository.findById(order.getId()).get(), 1);
+    }
+
     @RequestMapping("/YDJorders")
     public Object YDJorders(@RequestBody OrdersParams params){
         Page<Orders> page = ordersRepository.findAllByState(-1,new PageRequest(params.getPageNum(), 10));
