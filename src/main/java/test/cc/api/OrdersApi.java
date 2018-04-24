@@ -1,5 +1,6 @@
 package test.cc.api;
 
+import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -15,9 +16,11 @@ import test.cc.param.OrdersParams;
 import test.cc.repository.OrdersRepository;
 import test.cc.repository.UserRepository;
 import test.cc.service.OrdersService;
+import test.cc.service.SendSMSService;
 import test.cc.service.UserService;
 import test.cc.service.spec.OrdersSpec;
 import test.cc.util.BaseBeanUtil;
+import test.cc.util.DateTimeUtil;
 
 import java.util.Date;
 
@@ -42,8 +45,8 @@ public class OrdersApi {
     @Autowired
     private UserService userService;
 
-    @Value("${cc.test.value}")
-    private String msg;
+    @Autowired
+    private SendSMSService sendSMSService;
 
     @RequestMapping("/list")
     public Object ordersList(@RequestBody OrdersParams params){
@@ -71,7 +74,7 @@ public class OrdersApi {
 
     @RequestMapping("/50day")
     public Object last50DayOKNum(){
-        return BaseBeanUtil.setData(msg,1, ordersService.last50DayOKNum());
+        return BaseBeanUtil.setData(1, ordersService.last50DayOKNum());
     }
 
     @RequestMapping("/addYDJorder")
@@ -80,10 +83,38 @@ public class OrdersApi {
                 .cellphone(order.getCellphone())
                 .name(order.getUserName())
                 .build();
-        userService.addYDJorder(user);
+        userService.addYDJUer(user);
         order.setState(-1);
         order.setStartTime(new Date());
         ordersRepository.save(order);
         return BaseBeanUtil.setCode(1, "信息已登记，待员工审核");
+    }
+
+    @RequestMapping("/approval")
+    public Object approvalOrder(@RequestBody Orders order){
+        ordersRepository.save(order);
+        return BaseBeanUtil.setCode(1, "");
+    }
+
+    @RequestMapping("/delete")
+    public Object deleteOrder(@RequestBody Orders order){
+        ordersRepository.deleteById(order.getId());
+        return BaseBeanUtil.setCode(1, "");
+    }
+
+    @RequestMapping("/sendSms")
+    public Object sendSms(@RequestBody Orders order){
+        order.setState(2);
+        if (order.getEndPrice() == null)  order.setEndPrice(order.getStartPrice());
+        order = ordersRepository.save(order);
+        User user = userRepository.findByCellphone(order.getCellphone());
+        if (user != null){
+            user.setAmount(user.getAmount() + order.getEndPrice());
+            user.setLevel(user.getLevel() + 1);
+            userRepository.save(user);
+        }
+        SendSmsResponse response = sendSMSService.sendRepairSMS(order);
+        if (response != null && "OK".equals(response.getCode())) return BaseBeanUtil.setCode(1,"完成订单，成功发送短信");
+        return BaseBeanUtil.setCode(0, response == null ? "短信异常" : "短信异常请联系CC，短信code为：" + response.getCode());
     }
 }

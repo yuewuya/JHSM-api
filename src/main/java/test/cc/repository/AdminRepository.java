@@ -11,4 +11,6 @@ import test.cc.model.Admin;
  */
 public interface AdminRepository extends JpaRepository<Admin, String>, JpaSpecificationExecutor<Admin> {
     Admin findAllByIdAndAndPwd(String id, String pwd);
+
+    Admin findFirstByName(String name);
 }

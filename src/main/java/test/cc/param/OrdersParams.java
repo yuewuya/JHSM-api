@@ -18,6 +18,8 @@ public class OrdersParams{
     private Date[] startTime;
     private String assigner;
     private List<String> types;
+    private String type;
     private int pageNum;
     private Integer state;
+    private String oldPhoneState;
 }

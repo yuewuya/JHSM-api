@@ -15,3 +15,8 @@ cc:
   test:
     value: "还乱麻？"
 
+sms:
+  accessKeyId: "LTAIWppOC2s0bZVU"
+  accessKeySecret:  "r72nr6otE2MBV2WXbDmVzJQPduMavF"
+  signName: "聚宏数码"
+  templateCode: "SMS_130926106"

@@ -16,10 +16,11 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public void addYDJorder(User user){
+    public User addYDJUer(User user){
         User old = userRepository.findByCellphone(user.getCellphone());
         if (old == null){
-            userRepository.save(user);
+            return userRepository.save(user);
         }
+        return old;
     }
 }

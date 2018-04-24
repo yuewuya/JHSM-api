@@ -38,7 +38,7 @@ public class Orders {
     private Date startTime;
 
     @Column(name="end_time")
-    private String endTime;
+    private Date endTime;
 
     @Column(name="start_resource")
     private String startResource;
