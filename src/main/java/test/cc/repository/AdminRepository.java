@@ -13,4 +13,6 @@ public interface AdminRepository extends JpaRepository<Admin, String>, JpaSpecif
     Admin findAllByIdAndAndPwd(String id, String pwd);
 
     Admin findFirstByName(String name);
+
+    Admin findFirstById(String id);
 }

@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import test.cc.model.Admin;
+import test.cc.model.Books;
 import test.cc.model.Orders;
 import test.cc.model.User;
 import test.cc.param.OrdersParams;
+import test.cc.repository.BooksRepository;
 import test.cc.repository.OrdersRepository;
 import test.cc.repository.UserRepository;
 import test.cc.service.OrdersService;
@@ -47,6 +49,9 @@ public class OrdersApi {
 
     @Autowired
     private SendSMSService sendSMSService;
+
+    @Autowired
+    private BooksRepository booksRepository;
 
     @RequestMapping("/list")
     public Object ordersList(@RequestBody OrdersParams params){
@@ -93,6 +98,11 @@ public class OrdersApi {
     @RequestMapping("/approval")
     public Object approvalOrder(@RequestBody Orders order){
         ordersRepository.save(order);
+        Books book = booksRepository.findByBooktypeAndSearchKey("维修", order.getId());
+        double a = order.getEndPrice();
+        book.setInmoney((int)a);
+        book.setAmount((int)a - book.getCost());
+        booksRepository.save(book);
         return BaseBeanUtil.setCode(1, "");
     }
 
@@ -113,6 +123,18 @@ public class OrdersApi {
             user.setLevel(user.getLevel() + 1);
             userRepository.save(user);
         }
+        double inmoney = order.getEndPrice();
+        Books books = Books.builder()
+                .booktype("维修")
+                .bookname(order.getType())
+                .inmoney((int)inmoney)
+                .cost(0)
+                .amount((int)inmoney)
+                .remark("auto:维修订单。订单号:" + order.getId())
+                .searchKey(order.getId())
+                .time(new Date())
+                .build();
+        booksRepository.save(books);
         SendSmsResponse response = sendSMSService.sendRepairSMS(order);
         if (response != null && "OK".equals(response.getCode())) return BaseBeanUtil.setCode(1,"完成订单，成功发送短信");
         return BaseBeanUtil.setCode(0, response == null ? "短信异常" : "短信异常请联系CC，短信code为：" + response.getCode());

@@ -31,4 +31,16 @@ public class Admin {
     @Column(name="role")
     private Integer role;
 
+    @Column(name="kq")
+    private Integer kq;
+
+    @Column(name="js")
+    private Integer js;
+
+    @Column(name="yw")
+    private Integer yw;
+
+    @Column(name="num")
+    private Integer num;
+
 }

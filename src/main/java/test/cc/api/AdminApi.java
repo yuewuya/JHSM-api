@@ -30,13 +30,14 @@ public class AdminApi {
     private AdminRepository adminRepository;
 
     @RequestMapping("/add")
-    public Object add(Admin admin){
+    public Object add(@RequestBody Admin admin){
         if (adminService.findById(admin.getId()) != null) {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("msg","id已存在");
+            jsonObject.put("msg","电话号码已存在");
+            jsonObject.put("code","0");
             return jsonObject;
         }
-        return BaseBeanUtil.setData(adminService.add(admin),0);
+        return BaseBeanUtil.setData(adminService.add(admin),1);
     }
 
     @RequestMapping("/list")
@@ -62,5 +63,18 @@ public class AdminApi {
         List<String> names = list.stream().map(admin -> admin.getName()).collect(Collectors.toList());
         return BaseBeanUtil.setData(list.size(), names);
     }
+
+    @RequestMapping("/edit")
+    public Object edit(@RequestBody Admin admin){
+        adminRepository.save(admin);
+        return BaseBeanUtil.setCode(1, "修改成功");
+    }
+
+    @RequestMapping("/delete")
+    public Object delete(@RequestBody Admin admin){
+        adminRepository.deleteById(admin.getId());
+        return BaseBeanUtil.setCode(1, "");
+    }
+
 
 }

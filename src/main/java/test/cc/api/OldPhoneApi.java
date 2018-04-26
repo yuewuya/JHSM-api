@@ -8,9 +8,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import test.cc.model.Books;
 import test.cc.model.OldPhone;
 import test.cc.model.User;
 import test.cc.param.OrdersParams;
+import test.cc.repository.BooksRepository;
 import test.cc.repository.OldPhoneRepository;
 import test.cc.repository.UserRepository;
 import test.cc.service.UserService;
@@ -37,6 +39,9 @@ public class OldPhoneApi {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private BooksRepository booksRepository;
+
     @RequestMapping("/list")
     public Object ordersList(@RequestBody OrdersParams params){
         PageRequest request = OldPhoneSpec.buildPageRequest(params.getPageNum());
@@ -58,6 +63,17 @@ public class OldPhoneApi {
         oldPhone.setStartTime(new Date());
         oldPhone.setState("库存");
         oldPhoneRepository.save(oldPhone);
+        Books book = Books.builder()
+                .booktype("二手回收")
+                .bookname(oldPhone.getType())
+                .cost(oldPhone.getStartPrice())
+                .inmoney(0)
+                .amount(0-oldPhone.getStartPrice())
+                .time(new Date())
+                .searchKey(oldPhone.getId())
+                .remark("auto:二手机回收")
+                .build();
+        booksRepository.save(book);
         return BaseBeanUtil.setCode(1, "二手机回收信息已添加");
     }
 
@@ -70,6 +86,17 @@ public class OldPhoneApi {
     @RequestMapping("/sell")
     public Object sell(@RequestBody OldPhone oldPhone){
         oldPhoneRepository.save(oldPhone);
+        Books book = Books.builder()
+                .booktype("二手出售")
+                .bookname(oldPhone.getType())
+                .cost(0)
+                .inmoney(oldPhone.getEndPrice())
+                .amount(oldPhone.getEndPrice())
+                .time(new Date())
+                .searchKey(oldPhone.getId())
+                .remark("auto:二手机出售")
+                .build();
+        booksRepository.save(book);
         if (StringUtils.isNotEmpty(oldPhone.getCellphone())){
             User user = User.builder()
                     .cellphone(oldPhone.getTocellphone())
