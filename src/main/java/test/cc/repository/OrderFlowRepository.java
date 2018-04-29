@@ -13,5 +13,5 @@ import java.util.List;
  */
 public interface OrderFlowRepository extends JpaRepository<OrderFlow, Integer>, JpaSpecificationExecutor<OrderFlow> {
 
-    List<OrderFlow> findAllByOrderIdOrderByDateTimeDesc(int orderId);
+    List<OrderFlow> findAllByOrderIdOrderByCreateTimeDesc(int orderId);
 }

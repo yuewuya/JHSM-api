@@ -61,4 +61,6 @@ public class Orders {
     @Column(name="state")
     private Integer state;
 
+    @Column(name="order_type")
+    private String orderType;
 }

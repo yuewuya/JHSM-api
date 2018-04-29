@@ -26,15 +26,15 @@ public class OrderFlow {
     private Integer id;
 
     @Column(name="order_id")
-    private int orderId;
+    private Integer orderId;
 
-    @Column(name="describe")
-    private String describe;
+    @Column(name="msg")
+    private String msg;
 
-    @Column(name="date_time")
-    private Date dateTime;
+    @Column(name="create_time")
+    private Date createTime;
 
     @Column(name="state")
-    private int state;
+    private Integer state;
 
 }

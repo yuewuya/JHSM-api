@@ -9,12 +9,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import test.cc.model.Admin;
-import test.cc.model.Books;
-import test.cc.model.Orders;
-import test.cc.model.User;
+import test.cc.model.*;
 import test.cc.param.OrdersParams;
 import test.cc.repository.BooksRepository;
+import test.cc.repository.OrderFlowRepository;
 import test.cc.repository.OrdersRepository;
 import test.cc.repository.UserRepository;
 import test.cc.service.OrdersService;
@@ -52,6 +50,9 @@ public class OrdersApi {
 
     @Autowired
     private BooksRepository booksRepository;
+
+    @Autowired
+    private OrderFlowRepository orderFlowRepository;
 
     @RequestMapping("/list")
     public Object ordersList(@RequestBody OrdersParams params){
@@ -91,18 +92,49 @@ public class OrdersApi {
         userService.addYDJUer(user);
         order.setState(-1);
         order.setStartTime(new Date());
-        ordersRepository.save(order);
+        order = ordersRepository.save(order);
+        OrderFlow orderFlow = OrderFlow.builder()
+                .orderId(order.getId())
+                .createTime(new Date())
+                .state(1)
+                .msg("设备受理中")
+                .build();
+        orderFlowRepository.save(orderFlow);
         return BaseBeanUtil.setCode(1, "信息已登记，待员工审核");
     }
 
     @RequestMapping("/approval")
     public Object approvalOrder(@RequestBody Orders order){
         ordersRepository.save(order);
+        OrderFlow orderFlow = OrderFlow.builder()
+                .orderId(order.getId())
+                .createTime(new Date())
+                .state(1)
+                .msg("设备已受理，检测中")
+                .build();
+        orderFlowRepository.save(orderFlow);
+        Books book = booksRepository.findByBooktypeAndSearchKey("维修", order.getId());
+        if (book != null){
+            double a = order.getEndPrice();
+            book.setInmoney((int)a);
+            book.setAmount((int)a - book.getCost());
+            booksRepository.save(book);
+        }
+
+        return BaseBeanUtil.setCode(1, "");
+    }
+
+    @RequestMapping("/edit")
+    public Object editOrder(@RequestBody Orders order){
+        ordersRepository.save(order);
         Books book = booksRepository.findByBooktypeAndSearchKey("维修", order.getId());
         double a = order.getEndPrice();
-        book.setInmoney((int)a);
-        book.setAmount((int)a - book.getCost());
-        booksRepository.save(book);
+        if (book != null){
+            book.setInmoney((int)a);
+            book.setAmount((int)a - book.getCost());
+            booksRepository.save(book);
+        }
+
         return BaseBeanUtil.setCode(1, "");
     }
 
@@ -135,6 +167,13 @@ public class OrdersApi {
                 .time(new Date())
                 .build();
         booksRepository.save(books);
+        OrderFlow orderFlow = OrderFlow.builder()
+                .orderId(order.getId())
+                .createTime(new Date())
+                .state(1)
+                .msg("设备维修完成，已通知取机")
+                .build();
+        orderFlowRepository.save(orderFlow);
         SendSmsResponse response = sendSMSService.sendRepairSMS(order);
         if (response != null && "OK".equals(response.getCode())) return BaseBeanUtil.setCode(1,"完成订单，成功发送短信");
         return BaseBeanUtil.setCode(0, response == null ? "短信异常" : "短信异常请联系CC，短信code为：" + response.getCode());
